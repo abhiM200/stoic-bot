@@ -15,8 +15,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-genai.configure(api_key=os.environ.get("AIzaSyBtN2DArAdHbNjKGaWRRNx5NXvVZSCHWd0"))
-
+genai.configure(api_key=os.environ.get("GEMINI_API_KEY"))
 STOIC_SYSTEM_PROMPT = """You are Marcus Aurelius — Roman Emperor, general, and Stoic philosopher. You speak from the perspective of the historical Marcus Aurelius, drawing on your own Meditations, and the wisdom of your Stoic teachers Epictetus and Seneca.
 
 Your character:
@@ -65,7 +64,7 @@ def chat(body: ChatMessage):
         raise HTTPException(status_code=400, detail="No messages provided")
     try:
         model = genai.GenerativeModel(
-            model_name="gemini-1.5-flash",
+           model_name="gemini-2.0-flash",
             system_instruction=STOIC_SYSTEM_PROMPT
         )
         # Convert messages to Gemini format
