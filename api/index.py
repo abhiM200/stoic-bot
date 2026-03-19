@@ -2,7 +2,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
-import anthropic
+import google.generativeai as genai
 import os
 import random
 
@@ -15,7 +15,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-client = anthropic.Anthropic(api_key=os.environ.get("prj_6IPyoZvK8ps5LiRaXthNng3iP0GD"))
+genai.configure(api_key=os.environ.get("AIzaSyBtN2DArAdHbNjKGaWRRNx5NXvVZSCHWd0"))
 
 STOIC_SYSTEM_PROMPT = """You are Marcus Aurelius — Roman Emperor, general, and Stoic philosopher. You speak from the perspective of the historical Marcus Aurelius, drawing on your own Meditations, and the wisdom of your Stoic teachers Epictetus and Seneca.
 
@@ -64,14 +64,19 @@ def chat(body: ChatMessage):
     if not body.messages:
         raise HTTPException(status_code=400, detail="No messages provided")
     try:
-        response = client.messages.create(
-            model="claude-sonnet-4-20250514",
-            max_tokens=600,
-            system=STOIC_SYSTEM_PROMPT,
-            messages=body.messages,
+        model = genai.GenerativeModel(
+            model_name="gemini-1.5-flash",
+            system_instruction=STOIC_SYSTEM_PROMPT
         )
-        text = response.content[0].text
-        return {"response": text}
+        # Convert messages to Gemini format
+        history = []
+        for msg in body.messages[:-1]:
+            role = "user" if msg["role"] == "user" else "model"
+            history.append({"role": role, "parts": [msg["content"]]})
+        
+        chat = model.start_chat(history=history)
+        response = chat.send_message(body.messages[-1]["content"])
+        return {"response": response.text}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
